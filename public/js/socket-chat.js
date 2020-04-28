@@ -2,9 +2,9 @@ var socket = io();
 
 var params = new URLSearchParams(window.location.search);
 
-if (!params.has('nombre')) {
+if (!params.has('nombre') || !params.has('sala')) {
     window.location = 'index.html';
-    throw new Error('El nombre y la sala son necesario');
+    throw new Error('El nombre y sala son necesarios');
 }
 
 var usuario = {
@@ -13,44 +13,49 @@ var usuario = {
 };
 
 
+
 socket.on('connect', function() {
     console.log('Conectado al servidor');
+
     socket.emit('entrarChat', usuario, function(resp) {
-        console.log(resp);
-    })
+        // console.log('Usuarios conectados', resp);
+        renderizarUsuarios(resp);
+    });
 
 });
 
 // escuchar
 socket.on('disconnect', function() {
+
     console.log('Perdimos conexión con el servidor');
+
 });
 
-// Escuchar lista de personas conectadas
-socket.on('listaPersonas', function(mensaje) {
-    console.log('Servidor:', mensaje);
-});
 
-// Escuchar información
-socket.on('crearMensaje', function(mensaje) {
-    console.log('Servidor:', mensaje);
-});
-
-// *********** Mensajes Privados********
-
-socket.on('mensajePrivado', function(mensaje) {
-    console.log('mensaje privado', mensaje);
-})
-
-// // Enviar información
+// Enviar información
 // socket.emit('crearMensaje', {
-//     usuario: 'Fernando',
+//     nombre: 'Fernando',
 //     mensaje: 'Hola Mundo'
 // }, function(resp) {
 //     console.log('respuesta server: ', resp);
 // });
 
-// socket.emit('crearMensaje', {
-//     nombre: 'Jose',
-//     mensaje: 'Hola a todos'
-// };
+// Escuchar información
+socket.on('crearMensaje', function(mensaje) {
+    renderizarMensajes(mensaje, false);
+    scrollBottom();
+});
+
+// Escuchar cambios de usuarios
+// cuando un usuario entra o sale del chat
+socket.on('listaPersonas', function(resp) {
+    // console.log(personas);
+    renderizarUsuarios(resp);
+});
+
+// Mensajes privados
+socket.on('mensajePrivado', function(mensaje) {
+
+    console.log('Mensaje Privado:', mensaje);
+
+});

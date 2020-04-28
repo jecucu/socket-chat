@@ -25,15 +25,17 @@ io.on('connection', (client) => {
         let personas = usuarios.agregarPersona(client.id, usuario.nombre, usuario.sala);
         console.log('Personas Conectadas: ', personas);
 
+        client.broadcast.to(usuario.sala).emit('crearMensaje', crearMensaje('Administrador', `${ usuario.nombre } se unió al chat.`));
         client.broadcast.to(usuario.sala).emit('listaPersonas', usuarios.getPersonasPorSala(usuario.sala));
 
         return callback(usuarios.getPersonasPorSala(usuario.sala));
     })
 
-    client.on('crearMensaje', (data) => {
+    client.on('crearMensaje', (data, callback) => {
         let persona = usuarios.getPersona(client.id);
         let mensaje = crearMensaje(persona.nombre, data.mensaje);
         client.broadcast.to(persona.sala).emit('crearMensaje', mensaje);
+        callback(mensaje);
     })
 
     client.on('disconnect', () => {
@@ -41,7 +43,7 @@ io.on('connection', (client) => {
         let usuarioBorrado = usuarios.borrarPersona(client.id)
         console.log('Usuario desconectado: ', usuarioBorrado);
 
-        client.broadcast.to(usuarioBorrado.sala).emit('crearMensaje', crearMensaje('Administrador', `${ usuarioBorrado.nombre } abandonó el chat.`))
+        client.broadcast.to(usuarioBorrado.sala).emit('crearMensaje', crearMensaje('Administrador', `${ usuarioBorrado.nombre } abandonó el chat.`));
         client.broadcast.to(usuarioBorrado.sala).emit('listaPersonas', usuarios.getPersonasPorSala(usuarioBorrado.sala));
     });
 
